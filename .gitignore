@@ -1,0 +1,11 @@
+*.pyc
+*.swp
+*.swo
+
+.DS_Store
+.vagrant
+
+.env*
+venv
+envs/
+.cache/

@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+<head>
+  <title>phalaka</title>
+  <link href="css/style.css" media="all" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300|Montaga" rel="stylesheet" type="text/css" />
+  <link href="imgs/favicon-32x32.png" rel="shortcut icon" />
+</head>
+<body>
+  <div id="authenticate">
+    <h2>Login with Asana to get started.</h2>
+
+    <p><span class="brand">phalaka</span> uses Asana Connect to retrieve temporary access to your projects
+        and tasks. We won't store any of your personal data, ever.</p>
+
+    <p>
+      <div id="auth-button">Connect now</div>
+      <div id="auth-spinner"></div>
+    </p>
+  </div>
+
+  <div id="board">
+    <div class="navbar">
+      <div class="brand">phalaka</div>
+      <div id="spinner"></div>
+      <div class="scope">
+        <select id="workspaces">
+          <option value="0">-- Choose a workspace</option>
+        </select>
+        <select id="projects">
+          <option value="0">-- Choose a project</option>
+        </select>
+        <div id="project-name"></div>
+      </div>
+      <div id="auth-username" class="username"></div>
+    </div>
+
+    <div id="canvas"></div>
+  </div>
+</body>
+<script async="async" src="js/script.js"></script>
+</html>

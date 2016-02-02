@@ -1,0 +1,182 @@
+html, body {
+  background-color: #e2e9f2;
+  font-family: 'Source Sans Pro', sans-serif;
+  height: 100%;
+  width: 100%;
+}
+
+#authenticate {
+  margin: 15% 25%;
+  padding: 10px 25px;
+  background-color: #fff;
+  border: solid 1px #ddd;
+  letter-spacing:0.1px;
+  line-height:1.5em;
+}
+
+.brand {
+  color: #546b87;
+  font-family: 'Montaga', serif;
+  font-size:1.1em;
+  line-height:0.9em;
+  letter-spacing:0px;
+}
+
+#auth-button {
+  display: inline-block;
+  width: 159px;
+  height: 29px;
+  background-image: url("../imgs/asana-oauth-button-purple.png");
+  text-indent: -9999px;
+  border: solid 1px #fff;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+#auth-button:hover {
+  margin: 0;
+  border: solid 1px #9090d8;
+}
+
+#board {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  min-height: 100%;
+}
+
+#board .navbar {
+  position: fixed;
+  display: block;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 16px;
+  background-color: #fbfcfd;
+  padding: 8px 15px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  z-index: 1;
+}
+
+#board .navbar .brand {
+  position: fixed;
+  display: block;
+  background-image: url("../imgs/logo.png");
+  top: 4px;
+  left: 10px;
+  width: 24px;
+  height: 24px;
+  text-indent: -9999px;
+}
+
+#board .navbar .username {
+  position: fixed;
+  display: block;
+  top: 7px;
+  right: 15px;
+  height: 24px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+#board .navbar .scope {
+  text-align: center;
+}
+
+#board .navbar .scope select {
+  background-color: #e2e9f2;
+  position:absolute;
+  display: none;
+  width: 200px;
+  margin-left: -100px;
+  border: 0;
+  font-size: 12px;
+}
+
+#project-name {
+  position: relative;
+  display: none;
+  top: -4px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+#spinner, #auth-spinner {
+  display: none;
+  background-image: url("../imgs/spinner.gif");
+  width: 26px;
+  height: 26px;
+}
+
+#spinner {
+  position: fixed;
+  top: 3px;
+  left: 44px;
+}
+
+#auth-spinner {
+  margin-top: 5px;
+}
+
+#canvas {
+  position: absolute;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  top: 20px;
+  left: 0;
+  padding: 20px 10px;
+  font-size: 18px;
+  line-height: 2em;
+}
+
+#canvas .lane {
+  position: relative;
+  display: inline-block;
+  background-color: #fff;
+  border: solid 1px #ccc;
+  width: 200px;
+  min-height: 100vw;
+  padding: 0 5px;
+  margin-right: 10px;
+}
+
+#canvas .lane .marker {
+  position: relative;
+  display: block;
+  width: 100%;
+  font-size: 15px;
+  font-weight: bold;
+  line-height: 1em;
+  padding: 5px 5px 20px;
+  margin: 0 -5px;
+  text-align: center;
+}
+
+#canvas .lane .task {
+  display: inline-block;
+  float: left;
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  margin: 4px;
+  padding: 5px;
+  font-size: 10px;
+  line-height: 1.0em;
+  background-color: #ffffa5;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
+  cursor: move;
+}
+
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  #auth-button {
+    background-image: url("../imgs/asana-oauth-button-purple@2x.png");
+    background-size: 159px 29px;
+  }
+  #board .navbar .brand {
+    background-image: url("../imgs/logo@2x.png");
+    background-size: 24px 24px;
+  }
+}
