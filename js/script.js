@@ -2,6 +2,7 @@
   var projectId = document.location.hash.replace("#", "");
   var projects = {};
   var tasks = [];
+  var wips = {};
 
   // Handle initial authentication
   var auth_button = document.getElementById("authenticate");
@@ -128,6 +129,17 @@
               var marker = document.createElement("div");
               marker.className = "marker";
               marker.innerHTML = laneName;
+              var settings_button = document.createElement("div");
+              settings_button.className = "settings-button";
+              settings_button.addEventListener("click", toggleLaneSettings);
+              marker.appendChild(settings_button);
+
+              var cloneable = document.getElementById("settings-pane-cloneable");
+              var pane = cloneable.cloneNode(true);
+              var field = pane.querySelector("input[name=wip]");
+              field.addEventListener("change", setWIPLimit);
+              marker.appendChild(pane);
+
               lane.appendChild(marker);
               lane.addEventListener("drop", dragDrop);
               lane.addEventListener("dragover", dragOver);
@@ -195,6 +207,7 @@
       }
       container.appendChild(task);
     }
+    checkWIPLimits();
     dropzoneHide(e);
     apiPost("/tasks/" + data.replace("task-", "") + "/addProject", payload);
   }
@@ -230,6 +243,48 @@
     }
     if(container.className && container.className.indexOf("lane") >= 0){
       container.className = container.className.replace(" drop", "");
+    }
+  }
+
+  // WIP limit functionality
+  function toggleLaneSettings(e){
+    e.preventDefault();
+    var marker = e.target.parentNode;
+    var pane = marker.querySelector(".settings-pane");
+    var lane = marker.parentNode;
+    pane.style.display = (pane.style.display == "inline-block") ? "none": "inline-block";
+    if(pane.style.display == "inline-block"){
+      var field = pane.querySelector("input[name=wip]");
+      field.focus();
+    }
+  }
+  function setWIPLimit(e){
+    var field = e.target;
+    var lane = field.closest(".lane");
+    var laneId = lane.getAttribute("id").replace("lane-", "")
+    var limit = parseInt(e.target.value, 10);
+    if(!Number.isInteger(limit)){
+      limit = 0;
+    }
+    wips[laneId] = limit;
+    field.value = limit;
+    checkWIPLimits();
+  }
+  function checkWIPLimits(){
+    var lanes = document.querySelectorAll("#canvas .lane");
+    for(var i=0, x=lanes.length; i<x; i++){
+      var lane = lanes[i];
+      var laneId = lane.getAttribute("id").replace("lane-", "")
+      var exceeded = false;
+      if(wips.hasOwnProperty(laneId)){
+        var limit = wips[laneId];
+        var taskCount = lane.querySelectorAll(".task").length;
+        exceeded = (taskCount > limit);
+      }
+      lane.className = lane.className.replace(" wip", "");
+      if(exceeded){
+        lane.className = lane.className + " wip";
+      }
     }
   }
 
