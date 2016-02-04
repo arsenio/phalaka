@@ -1,8 +1,10 @@
 (function(){
-  var projectId = document.location.hash.replace("#", "");
+  var projectId = "";
   var projects = {};
   var tasks = [];
   var wips = {};
+
+  getHash();
 
   // Handle initial authentication
   var auth_button = document.getElementById("authenticate");
@@ -102,7 +104,7 @@
   function getProjectDetails(projectId){
     apiGet("/projects/" + projectId, function(details){
       if(details.data){
-        document.location.hash = projectId;
+        setHash();
         document.getElementById("projects").style.display = "none";
         var projectName = document.getElementById("project-name");
         projectName.innerHTML = details.data.name;
@@ -166,6 +168,7 @@
               currentLane.appendChild(ticket);
             }
           }
+          checkWIPLimits();
         });
       }
     });
@@ -268,6 +271,7 @@
     }
     wips[laneId] = limit;
     field.value = limit;
+    setHash();
     checkWIPLimits();
   }
   function checkWIPLimits(){
@@ -286,6 +290,38 @@
         lane.className = lane.className + " wip";
       }
     }
+  }
+
+  // Hash handling
+  function getHash(){
+    var hash = document.location.hash.replace("#", "");
+    if(hash.length){
+      var hash_parts = hash.split(";");
+      projectId = hash_parts[0];
+      if(hash_parts.length == 2){
+        var hash_limits = hash_parts[1].split(",");
+        for(var i=0, x=hash_limits.length; i<x; i++){
+          var hash_limit = hash_limits[i];
+          var hash_limit_parts = hash_limit.split(":");
+          if(hash_limit_parts.length == 2){
+            wips[hash_limit_parts[0]] = parseInt(hash_limit_parts[1], 10);
+          }
+        }
+      }
+    }
+  }
+  function setHash(){
+    var limit_strings = [];
+    for(var key in wips){
+      if(wips.hasOwnProperty(key)){
+        limit_strings.push(key + ":" + wips[key]);
+      }
+    }
+    var new_hash = projectId;
+    if(limit_strings.length){
+      new_hash += ";" + limit_strings.sort().join(",");
+    }
+    document.location.hash = new_hash;
   }
 
   // Utility functions
