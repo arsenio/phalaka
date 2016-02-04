@@ -143,6 +143,10 @@ html, body {
   margin-right: 10px;
 }
 
+#canvas .lane.drop {
+  border: solid 1px #00f;
+}
+
 #canvas .lane .marker {
   position: relative;
   display: block;

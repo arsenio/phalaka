@@ -3,6 +3,8 @@
   var ASANA_REDIRECT_URI = "http://phalaka.local/callback";
 
   var projectId = document.location.hash.replace("#", "");
+  var projects = {};
+  var tasks = [];
 
   // Handle initial authentication
   var auth_button = document.getElementById("authenticate");
@@ -53,19 +55,19 @@
       if(response.data){
         var workspaceOptions = document.getElementById("workspaces");
         workspaceOptions.style.display = "none";
-        var workspaces = workspaceOptions.children;
-        for(var i=workspaces.length - 1; i>=0; i--){
-          var workspace = workspaces[i];
-          if(workspace.getAttribute("value") != 0){
-            workspaces[i].remove();
+        var options = workspaceOptions.children;
+        for(var i=options.length - 1; i>=0; i--){
+          var option = options[i];
+          if(option.getAttribute("value") != 0){
+            options[i].remove();
           }
         }
         for(var i=0, x=response.data.length; i<x; i++){
           var datum = response.data[i];
-          var workspace = document.createElement("option");
-          workspace.setAttribute("value", datum.id);
-          workspace.innerHTML = datum.name;
-          workspaceOptions.appendChild(workspace);
+          var option = document.createElement("option");
+          option.setAttribute("value", datum.id);
+          option.innerHTML = datum.name;
+          workspaceOptions.appendChild(option);
         }
         workspaceOptions.style.display = "inline-block";
       }
@@ -78,19 +80,21 @@
         document.getElementById("workspaces").style.display = "none";
         var projectOptions = document.getElementById("projects");
         projectOptions.style.display = "none";
-        var projects = projectOptions.children;
-        for(var i=projects.length - 1; i>=0; i--){
-          var project = projects[i];
-          if(project.getAttribute("value") != 0){
-            projects[i].remove();
+        var options = projectOptions.children;
+        for(var i=options.length - 1; i>=0; i--){
+          var option = options[i];
+          if(option.getAttribute("value") != 0){
+            options[i].remove();
           }
         }
+        projects = {};
         for(var i=0, x=response.data.length; i<x; i++){
           var datum = response.data[i];
-          var project = document.createElement("option");
-          project.setAttribute("value", datum.id);
-          project.innerHTML = datum.name;
-          projectOptions.appendChild(project);
+          var option = document.createElement("option");
+          option.setAttribute("value", datum.id);
+          option.innerHTML = datum.name;
+          projectOptions.appendChild(option);
+          projects[datum.id] = datum.name;
         }
         projectOptions.style.display = "inline-block";
       }
@@ -105,49 +109,131 @@
         var projectName = document.getElementById("project-name");
         projectName.innerHTML = details.data.name;
         projectName.style.display = "inline-block";
-        document.title = details.data.name + " - phalaka";
+        document.title = details.data.name;
 
         var payload = {"opt_fields": "name,completed,assignee"};
-        apiGet("/projects/" + projectId + "/tasks", payload, function(tasks){
-          if(tasks.data){
-            var canvas = document.getElementById("canvas");
-            // Two passes will save us hitting the API twice for this.
-            // Pass one: build the lanes.
-            for(var i=0, x=tasks.data.length; i<x; i++){
-              var task = tasks.data[i];
-              if(task.name.endsWith(":")){
-                var laneName = task.name.substring(0, task.name.length - 1);
-                var lane = document.createElement("div");
-                lane.setAttribute("id", "lane-" + task.id);
-                lane.className = "lane";
-                var marker = document.createElement("div");
-                marker.className = "marker";
-                marker.innerHTML = laneName;
-                lane.appendChild(marker);
-                canvas.appendChild(lane);
-              }
+        tasks = [];
+        apiGet("/projects/" + projectId + "/tasks", payload, function(tickets){
+          if(tickets.data){
+            tasks = tickets.data;
+          }
+
+          var canvas = document.getElementById("canvas");
+          // Two passes will save us hitting the API twice for this.
+          // Pass one: build the lanes.
+          for(var i=0, x=tasks.length; i<x; i++){
+            var task = tasks[i];
+            if(task.name.endsWith(":")){
+              var laneName = task.name.substring(0, task.name.length - 1);
+              var lane = document.createElement("div");
+              lane.setAttribute("id", "lane-" + task.id);
+              lane.className = "lane";
+              var marker = document.createElement("div");
+              marker.className = "marker";
+              marker.innerHTML = laneName;
+              lane.appendChild(marker);
+              lane.addEventListener("drop", dragDrop);
+              lane.addEventListener("dragover", dragOver);
+              lane.addEventListener("dragleave", dragLeave);
+              canvas.appendChild(lane);
             }
-            // Pass two: add the uncompleted tasks to the lanes.
-            var currentLane = undefined;
-            for(var i=0, x=tasks.data.length; i<x; i++){
-              var task = tasks.data[i];
-              if(task.name.endsWith(":")){
-                currentLane = document.getElementById("lane-" + task.id);
-              }else if(currentLane){
-                if(task.completed){
-                  continue;
-                }
-                var ticket = document.createElement("div");
-                ticket.setAttribute("id", "task-" + task.id);
-                ticket.className = "task";
-                ticket.innerHTML = task.name;
-                currentLane.appendChild(ticket);
+          }
+          // Pass two: add the uncompleted tasks to the lanes.
+          var currentLane = undefined;
+          for(var i=0, x=tasks.length; i<x; i++){
+            var task = tasks[i];
+            if(task.name.endsWith(":")){
+              currentLane = document.getElementById("lane-" + task.id);
+            }else if(currentLane){
+              if(task.completed){
+                continue;
               }
+              var ticket = document.createElement("div");
+              ticket.setAttribute("id", "task-" + task.id);
+              ticket.className = "task";
+              ticket.setAttribute("draggable", "true");
+              ticket.innerHTML = task.name;
+              ticket.addEventListener("dragstart", dragStart);
+              currentLane.appendChild(ticket);
             }
           }
         });
       }
     });
+  }
+
+  // Drag and drop functionality
+  function dragStart(e) {
+    e.dataTransfer.setData("text/plain", e.target.id);
+  }
+
+  function dragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move"
+    dropzoneShow(e);
+  }
+
+  function dragLeave(e) {
+    e.preventDefault();
+    dropzoneHide(e);
+  }
+
+  function dragDrop(e) {
+    e.preventDefault();
+    var data = e.dataTransfer.getData("text");
+    var task = document.getElementById(data);
+
+    var container = e.target;
+    var payload = {"project": projectId};
+    if(container.className.indexOf("task") >= 0){
+      payload["insert_before"] = container.id.replace("task-", "");
+      container.parentNode.insertBefore(task, container);
+    }else{
+      var laneTasks = document.querySelectorAll("#" + container.id + " .task");
+      if(laneTasks.length){
+        var final = laneTasks[laneTasks.length - 1];
+        payload["insert_after"] = final.id.replace("task-", "");
+      }else{
+        payload["section"] = container.id.replace("lane-", "");
+      }
+      container.appendChild(task);
+    }
+    dropzoneHide(e);
+    apiPost("/tasks/" + data.replace("task-", "") + "/addProject", payload);
+  }
+
+  function dropzoneShow(e) {
+    if(!e.target.className || e.target.id == e.dataTransfer.getData("text")){
+      return;
+    }
+    var container = e.target;
+    if(!container.className){
+      return;
+    }
+    if(container.className && container.className.indexOf("task") >= 0){
+      container = container.parentNode;
+    }
+    if(container.className && container.className.indexOf("lane") >= 0){
+      if(container.className.indexOf("drop") == -1){
+        container.className = container.className + " drop";
+      }
+    }
+  }
+
+  function dropzoneHide(e) {
+    if(e.target.id == e.dataTransfer.getData("text")){
+      return;
+    }
+    var container = e.target;
+    if(!container.className){
+      return;
+    }
+    if(container.className && container.className.indexOf("task") >= 0){
+      container = container.parentNode;
+    }
+    if(container.className && container.className.indexOf("lane") >= 0){
+      container.className = container.className.replace(" drop", "");
+    }
   }
 
   // Utility functions
@@ -193,14 +279,17 @@
           xhr.send();
         }
       }catch(e){
+// TODO: better fatal error visualization
 console.log("Fatal error. -1");
       }
     }else{
+      document.getElementById("spinner").style.display = "none";
       if(this.handler){
         try{
-          document.getElementById("spinner").style.display = "none";
           this.handler(JSON.parse(this.responseText));
+          delete this.responseText;
         }catch(e){
+// TODO: better fatal error visualization
 console.log("Fatal error. -2");
         }
       }
@@ -216,7 +305,16 @@ console.log("Fatal error. -2");
     xhr.addEventListener("load", _xhrOnLoad);
     xhr.open(method, "https://app.asana.com/api/1.0" + endpoint);
     xhr.setRequestHeader("Authorization", "Bearer " + access_token);
-    xhr.send();
+    var formData = undefined;
+    if(params){
+      formData = new FormData();
+      for(var key in params){
+        if(params.hasOwnProperty(key)){
+          formData.append(key, params[key]);
+        }
+      }
+    }
+    xhr.send(formData);
   }
   function apiGet(endpoint, params, handler){
     if(typeof(params) == "function"){
@@ -236,5 +334,12 @@ console.log("Fatal error. -2");
       params = undefined;
     }
     _api("GET", endpoint, params, handler);
+  }
+  function apiPost(endpoint, params, handler){
+    if(typeof(params) == "function"){
+      handler = params;
+      params = undefined;
+    }
+    _api("POST", endpoint, params, handler);
   }
 })();
