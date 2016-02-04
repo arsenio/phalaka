@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import requests
 
 from cgi import parse_qs
@@ -5,9 +7,11 @@ from cgi import parse_qs
 import Cookie
 import datetime
 
-ASANA_CLIENT_ID = "85566523072252"
-ASANA_CLIENT_SECRET = "3a6f0ac79679d87b3e51c9ae5f2da4e3"
-ASANA_REDIRECT_URI = "http://phalaka.local/callback"
+if __package__ is None:
+    from os import sys, path
+    sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+
+from phalaka import config
 
 def application(environ, start_response):
     qs = parse_qs(environ["QUERY_STRING"])
@@ -23,9 +27,9 @@ def application(environ, start_response):
     headers = []
 
     payload = {
-        "client_id": ASANA_CLIENT_ID,
-        "client_secret": ASANA_CLIENT_SECRET,
-        "redirect_uri": ASANA_REDIRECT_URI,
+        "client_id": config.ASANA_CLIENT_ID,
+        "client_secret": config.ASANA_CLIENT_SECRET,
+        "redirect_uri": config.ASANA_REDIRECT_URI,
     }
 
     payloaded = False

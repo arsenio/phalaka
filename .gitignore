@@ -9,3 +9,5 @@
 venv
 envs/
 .cache/
+
+config.py

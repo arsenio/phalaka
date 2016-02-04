@@ -1,7 +1,4 @@
 (function(){
-  var ASANA_CLIENT_ID = "85566523072252";
-  var ASANA_REDIRECT_URI = "http://phalaka.local/callback";
-
   var projectId = document.location.hash.replace("#", "");
   var projects = {};
   var tasks = [];
