@@ -1,5 +1,5 @@
 (function(){
-  var projectId = "";
+  var boardProjectId = "";
   var projects = {};
   var tasks = [];
   var wips = {};
@@ -16,7 +16,7 @@
                          + "?client_id=" + ASANA_CLIENT_ID
                          + "&redirect_uri=" + ASANA_REDIRECT_URI
                          + "&response_type=code"
-                         + "&state=" + projectId;
+                         + "&state=" + document.location.hash.replace("#", "");
   });
 
   // If we have an access_token and it's valid, we can hide the authentication
@@ -26,8 +26,8 @@
   if(access_token && refresh_token){
     document.getElementById("authenticate").style.display = "none";
     document.getElementById("board").style.display = "block";
-    if(parseInt(projectId, 10)){
-      getProjectDetails(projectId);
+    if(parseInt(boardProjectId, 10)){
+      getProjectDetails(boardProjectId);
     }else{
       getWorkspaces();
     }
@@ -102,6 +102,7 @@
   }
 
   function getProjectDetails(projectId){
+    boardProjectId = projectId;
     apiGet("/projects/" + projectId, function(details){
       if(details.data){
         setHash();
@@ -201,7 +202,7 @@
     var task = document.getElementById(data);
 
     var container = e.target;
-    var payload = {"project": projectId};
+    var payload = {"project": boardProjectId};
     if(container.className.indexOf("task") >= 0){
       payload["insert_before"] = container.id.replace("task-", "");
       container.parentNode.insertBefore(task, container);
@@ -302,7 +303,7 @@
     var hash = document.location.hash.replace("#", "");
     if(hash.length){
       var hash_parts = hash.split(";");
-      projectId = hash_parts[0];
+      boardProjectId = hash_parts[0];
       if(hash_parts.length == 2){
         var hash_limits = hash_parts[1].split(",");
         for(var i=0, x=hash_limits.length; i<x; i++){
@@ -322,7 +323,7 @@
         limit_strings.push(key + ":" + wips[key]);
       }
     }
-    var new_hash = projectId;
+    var new_hash = boardProjectId;
     if(limit_strings.length){
       new_hash += ";" + limit_strings.sort().join(",");
     }
