@@ -139,6 +139,11 @@
               var cloneable = document.getElementById("settings-pane-cloneable");
               var pane = cloneable.cloneNode(true);
               var field = pane.querySelector("input[name=wip]");
+              if(wips.hasOwnProperty(task.id)){
+                field.value = wips[task.id];
+              }else{
+                field.value = "";
+              }
               field.addEventListener("change", setWIPLimit);
               marker.appendChild(pane);
 
