@@ -329,6 +329,15 @@
     }
     document.location.hash = new_hash;
   }
+  window.addEventListener("hashchange", function(e){
+    var oldProjectId = boardProjectId;
+    getHash();
+    if(boardProjectId != oldProjectId){
+      getProjectDetails(boardProjectId);
+    }else{
+      checkWIPLimits();
+    }
+  });
 
   // Utility functions
   function getCookie(cookie_name){
