@@ -125,7 +125,7 @@
           }
 
           var canvas = document.getElementById("canvas");
-          // Two passes will save us hitting the API twice for this.
+          // Two task passes will save us hitting the API twice for this.
           // Tasks Pass One: build the lanes (and pick up any missing
           // users not assigned to the project overall).
           for(var i=0, x=tasks.length; i<x; i++){
@@ -158,9 +158,6 @@
               marker.appendChild(pane);
 
               lane.appendChild(marker);
-              lane.addEventListener("drop", dragDrop);
-              lane.addEventListener("dragover", dragOver);
-              lane.addEventListener("dragleave", dragLeave);
               canvas.appendChild(lane);
             }
           }
@@ -176,17 +173,33 @@
             return a[1].toLowerCase() > b[1].toLowerCase();
           });
 
+          // We need to add dropzones to each lane
+          var lanes = canvas.querySelectorAll(".lane");
+          for(var i = 0, x=lanes.length; i<x; i++){
+            var lane = lanes[i];
+            var laneId = lane.getAttribute("id").replace("lane-", "")
+            var dropzone = document.createElement("div");
+            dropzone.setAttribute("id", "dropzone-" + laneId);
+            dropzone.className = "dropzone";
+            dropzone.addEventListener("drop", dragDrop);
+            dropzone.addEventListener("dragover", dragOver);
+            dropzone.addEventListener("dragleave", dragLeave);
+            lane.appendChild(dropzone);
+          }
+
           // Tasks, Pass Two: add the uncompleted tasks to the lanes.
           var currentLane = undefined;
+          var currentLaneId = undefined;
           for(var i=0, x=tasks.length; i<x; i++){
             var task = tasks[i];
-console.log(task);
             if(task.name.endsWith(":")){
-              currentLane = document.getElementById("lane-" + task.id);
+              currentLaneId = task.id;
+              currentLane = document.getElementById("lane-" + currentLaneId);
             }else if(currentLane){
               if(task.completed){
                 continue;
               }
+              var dropzone = document.getElementById("dropzone-" + currentLaneId);
               var ticket = document.createElement("div");
               ticket.setAttribute("id", "task-" + task.id);
               ticket.className = "task";
@@ -202,7 +215,7 @@ console.log(task);
                 ticket.appendChild(photo);
               }
 
-              currentLane.appendChild(ticket);
+              dropzone.appendChild(ticket);
             }
           }
           checkWIPLimits();
@@ -236,14 +249,14 @@ console.log(task);
     var payload = {"project": boardProjectId};
     if(container.className.indexOf("task") >= 0){
       payload["insert_before"] = container.id.replace("task-", "");
-      container.parentNode.insertBefore(task, container);
+      container.closest(".dropzone").insertBefore(task, container);
     }else{
       var laneTasks = document.querySelectorAll("#" + container.id + " .task");
       if(laneTasks.length){
         var final = laneTasks[laneTasks.length - 1];
         payload["insert_after"] = final.id.replace("task-", "");
       }else{
-        payload["section"] = container.id.replace("lane-", "");
+        payload["section"] = container.id.replace("dropzone-", "");
       }
       container.appendChild(task);
     }
@@ -261,11 +274,11 @@ console.log(task);
       return;
     }
     if(container.className && container.className.indexOf("task") >= 0){
-      container = container.parentNode;
+      container = container.closest(".dropzone");
     }
-    if(container.className && container.className.indexOf("lane") >= 0){
-      if(container.className.indexOf("drop") == -1){
-        container.className = container.className + " drop";
+    if(container.className && container.className.indexOf("dropzone") >= 0){
+      if(container.className.indexOf("active") == -1){
+        container.className = container.className + " active";
       }
     }
   }
@@ -279,10 +292,10 @@ console.log(task);
       return;
     }
     if(container.className && container.className.indexOf("task") >= 0){
-      container = container.parentNode;
+      container = container.closest(".dropzone");
     }
-    if(container.className && container.className.indexOf("lane") >= 0){
-      container.className = container.className.replace(" drop", "");
+    if(container.className && container.className.indexOf("dropzone") >= 0){
+      container.className = container.className.replace(" active", "");
     }
   }
 
@@ -316,15 +329,19 @@ console.log(task);
     for(var i=0, x=lanes.length; i<x; i++){
       var lane = lanes[i];
       var laneId = lane.getAttribute("id").replace("lane-", "")
-      var exceeded = false;
       if(wips.hasOwnProperty(laneId)){
         var limit = wips[laneId];
-        var taskCount = lane.querySelectorAll(".task").length;
-        exceeded = (taskCount > limit);
-      }
-      lane.className = lane.className.replace(" wip", "");
-      if(exceeded){
-        lane.className = lane.className + " wip";
+        var exceeded = false;
+        var zones = lane.querySelectorAll(".dropzone");
+        for(var j=0, y=zones.length; j<y; j++){
+          var zone = zones[j];
+          var taskCount = zone.querySelectorAll(".task").length;
+          exceeded = (taskCount > limit);
+        }
+        zone.className = zone.className.replace(" wip", "");
+        if(exceeded){
+          zone.className = zone.className + " wip";
+        }
       }
     }
   }
@@ -414,7 +431,7 @@ console.log(task);
         }
       }catch(e){
 // TODO: better fatal error visualization
-console.log("Fatal error. -1");
+console.log("Fatal error: -1");
       }
     }else{
       document.getElementById("spinner").style.display = "none";
@@ -424,7 +441,7 @@ console.log("Fatal error. -1");
           delete this.responseText;
         }catch(e){
 // TODO: better fatal error visualization
-console.log("Fatal error. -2");
+console.log("Fatal error: -2 (" + e);
         }
       }
     }

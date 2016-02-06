@@ -143,15 +143,6 @@ html, body {
   margin-right: 10px;
 }
 
-#canvas .lane.drop {
-  border: solid 1px #00f;
-}
-
-#canvas .lane.wip {
-  background-color: #fdd;
-  border: solid 1px #faa;
-}
-
 #canvas .lane .marker {
   position: relative;
   display: block;
@@ -198,10 +189,28 @@ html, body {
   font-weight: normal;
 }
 
+#canvas .lane .dropzone {
+  display: block;
+  padding: 20px 0;
+  border: solid 1px #fff;
+  width: 100%;
+  margin: 0;
+  position: flex;
+  z-index: 1;
+}
+
+#canvas .lane .dropzone.active {
+  border: dotted 1px #55f;
+}
+
+#canvas .lane .dropzone.wip {
+  background-color: #fdd;
+}
+
+
 #canvas .lane .task {
   position: relative;
   display: inline-block;
-  float: left;
   width: 64px;
   height: 64px;
   overflow: hidden;
