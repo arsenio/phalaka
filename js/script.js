@@ -8,8 +8,8 @@
   getHash();
 
   // Handle initial authentication
-  var auth_button = document.getElementById("authenticate");
-  auth_button.addEventListener("click", function(e){
+  var authButton = document.getElementById("authenticate");
+  authButton.addEventListener("click", function(e){
     e.preventDefault();
     document.getElementById("auth-button").style.display = "none";
     document.getElementById("auth-spinner").style.display = "inline-block";
@@ -20,11 +20,11 @@
                          + "&state=" + document.location.hash.replace("#", "");
   });
 
-  // If we have an access_token and it's valid, we can hide the authentication
+  // If we have an accessToken and it's valid, we can hide the authentication
   // prompt and set up the canvas instead.
-  var access_token = getCookie("access");
-  var refresh_token = getCookie("refresh");
-  if(access_token && refresh_token){
+  var accessToken = getCookie("access");
+  var refreshToken = getCookie("refresh");
+  if(accessToken && refreshToken){
     document.getElementById("authenticate").style.display = "none";
     document.getElementById("board").style.display = "block";
     if(parseInt(boardProjectId, 10)){
@@ -141,10 +141,10 @@
               var marker = document.createElement("div");
               marker.className = "marker";
               marker.innerHTML = laneName;
-              var settings_button = document.createElement("div");
-              settings_button.className = "settings-button";
-              settings_button.addEventListener("click", toggleLaneSettings);
-              marker.appendChild(settings_button);
+              var settingsButton = document.createElement("div");
+              settingsButton.className = "settings-button";
+              settingsButton.addEventListener("click", toggleLaneSettings);
+              marker.appendChild(settingsButton);
 
               var cloneable = document.getElementById("settings-pane-cloneable");
               var pane = cloneable.cloneNode(true);
@@ -165,13 +165,14 @@
             }
           }
           // This is a good time to carve out assignee rows.
-          var sorted_members = [];
+          // TODO: make sense of this
+          var sortedMembers = [];
           for(var key in members){
             if(members.hasOwnProperty(key)){
-              sorted_members.push([key, members[key]])
+              sortedMembers.push([key, members[key]])
             }
           }
-          sorted_members.sort(function(a, b){
+          sortedMembers.sort(function(a, b){
             return a[1].toLowerCase() > b[1].toLowerCase();
           });
 
@@ -332,32 +333,32 @@ console.log(task);
   function getHash(){
     var hash = document.location.hash.replace("#", "");
     if(hash.length){
-      var hash_parts = hash.split(";");
-      boardProjectId = hash_parts[0];
-      if(hash_parts.length == 2){
-        var hash_limits = hash_parts[1].split(",");
-        for(var i=0, x=hash_limits.length; i<x; i++){
-          var hash_limit = hash_limits[i];
-          var hash_limit_parts = hash_limit.split(":");
-          if(hash_limit_parts.length == 2){
-            wips[hash_limit_parts[0]] = parseInt(hash_limit_parts[1], 10);
+      var hashParts = hash.split(";");
+      boardProjectId = hashParts[0];
+      if(hashParts.length == 2){
+        var hashLimits = hashParts[1].split(",");
+        for(var i=0, x=hashLimits.length; i<x; i++){
+          var hashLimit = hashLimits[i];
+          var hashLimitParts = hashLimit.split(":");
+          if(hashLimitParts.length == 2){
+            wips[hashLimitParts[0]] = parseInt(hashLimitParts[1], 10);
           }
         }
       }
     }
   }
   function setHash(){
-    var limit_strings = [];
+    var limitStrings = [];
     for(var key in wips){
       if(wips.hasOwnProperty(key)){
-        limit_strings.push(key + ":" + wips[key]);
+        limitStrings.push(key + ":" + wips[key]);
       }
     }
-    var new_hash = boardProjectId;
-    if(limit_strings.length){
-      new_hash += ";" + limit_strings.sort().join(",");
+    var newHash = boardProjectId;
+    if(limitStrings.length){
+      newHash += ";" + limitStrings.sort().join(",");
     }
-    document.location.hash = new_hash;
+    document.location.hash = newHash;
   }
   window.addEventListener("hashchange", function(e){
     var oldProjectId = boardProjectId;
@@ -370,22 +371,22 @@ console.log(task);
   });
 
   // Utility functions
-  function getCookie(cookie_name){
-    var raw_cookies = document.cookie.split("; ");
+  function getCookie(cookieName){
+    var rawCookies = document.cookie.split("; ");
 
-    for(var i=0, x=raw_cookies.length; i<x; i++){
-      var cookie = raw_cookies[i].split("=");
-      if(cookie[0] == cookie_name){
+    for(var i=0, x=rawCookies.length; i<x; i++){
+      var cookie = rawCookies[i].split("=");
+      if(cookie[0] == cookieName){
         return cookie[1];
       }
     }
     return undefined;
   }
 
-  function setCookie(cookie_name, value){
+  function setCookie(cookieName, value){
     var expiry = new Date();
     expiry.setDate(expiry.getDate() + 30);
-    document.cookie = cookie_name + "=" + value
+    document.cookie = cookieName + "=" + value
                     + ";path=/;expires=" + expiry.toUTCString();
   }
 
@@ -404,11 +405,11 @@ console.log(task);
           var origXhr = this;
           var xhr = new XMLHttpRequest()
           xhr.addEventListener("load", function(){
-            access_token = getCookie("access");
+            accessToken = getCookie("access");
             _api(origXhr.method, origXhr.endpoint,
                  origXhr.params, origXhr.handler);
           });
-          xhr.open("GET", "/callback?refresh=" + refresh_token);
+          xhr.open("GET", "/callback?refresh=" + refreshToken);
           xhr.send();
         }
       }catch(e){
@@ -437,7 +438,7 @@ console.log("Fatal error. -2");
     xhr.handler = handler;
     xhr.addEventListener("load", _xhrOnLoad);
     xhr.open(method, "https://app.asana.com/api/1.0" + endpoint);
-    xhr.setRequestHeader("Authorization", "Bearer " + access_token);
+    xhr.setRequestHeader("Authorization", "Bearer " + accessToken);
     var formData = undefined;
     if(params){
       formData = new FormData();
