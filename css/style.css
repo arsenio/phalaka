@@ -199,6 +199,7 @@ html, body {
 }
 
 #canvas .lane .task {
+  position: relative;
   display: inline-block;
   float: left;
   width: 64px;
@@ -211,6 +212,18 @@ html, body {
   background-color: #ffffa5;
   box-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
   cursor: move;
+}
+
+#canvas .lane .task .photo {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 11px;
+  z-index: 1;
+  opacity: 0.6;
+  background-size: 16px 16px;
 }
 
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {

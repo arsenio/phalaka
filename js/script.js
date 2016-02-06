@@ -1,6 +1,7 @@
 (function(){
   var boardProjectId = "";
   var projects = {};
+  var members = {};
   var tasks = [];
   var wips = {};
 
@@ -103,7 +104,8 @@
 
   function getProjectDetails(projectId){
     boardProjectId = projectId;
-    apiGet("/projects/" + projectId, function(details){
+    var payload = {"opt_fields": "name,members,members.name"};
+    apiGet("/projects/" + projectId, payload, function(details){
       if(details.data){
         setHash();
         document.getElementById("projects").style.display = "none";
@@ -111,8 +113,11 @@
         projectName.innerHTML = details.data.name;
         projectName.style.display = "inline-block";
         document.title = details.data.name;
-
-        var payload = {"opt_fields": "name,completed,assignee"};
+        for(var i=0, x=details.data.members.length; i<x; i++){
+          var member = details.data.members[i];
+          members[member.id] = member.name;
+        }
+        var payload = {"opt_fields": "name,completed,assignee,assignee.name,assignee.photo"};
         tasks = [];
         apiGet("/projects/" + projectId + "/tasks", payload, function(tickets){
           if(tickets.data){
@@ -121,9 +126,13 @@
 
           var canvas = document.getElementById("canvas");
           // Two passes will save us hitting the API twice for this.
-          // Pass one: build the lanes.
+          // Tasks Pass One: build the lanes (and pick up any missing
+          // users not assigned to the project overall).
           for(var i=0, x=tasks.length; i<x; i++){
             var task = tasks[i];
+            if(task.assignee){
+              members[task.assignee.id] = task.assignee.name;
+            }
             if(task.name.endsWith(":")){
               var laneName = task.name.substring(0, task.name.length - 1);
               var lane = document.createElement("div");
@@ -155,10 +164,22 @@
               canvas.appendChild(lane);
             }
           }
-          // Pass two: add the uncompleted tasks to the lanes.
+          // This is a good time to carve out assignee rows.
+          var sorted_members = [];
+          for(var key in members){
+            if(members.hasOwnProperty(key)){
+              sorted_members.push([key, members[key]])
+            }
+          }
+          sorted_members.sort(function(a, b){
+            return a[1].toLowerCase() > b[1].toLowerCase();
+          });
+
+          // Tasks, Pass Two: add the uncompleted tasks to the lanes.
           var currentLane = undefined;
           for(var i=0, x=tasks.length; i<x; i++){
             var task = tasks[i];
+console.log(task);
             if(task.name.endsWith(":")){
               currentLane = document.getElementById("lane-" + task.id);
             }else if(currentLane){
@@ -171,6 +192,15 @@
               ticket.setAttribute("draggable", "true");
               ticket.innerHTML = task.name;
               ticket.addEventListener("dragstart", dragStart);
+
+              if(task.assignee && task.assignee.photo && task.assignee.photo.image_21x21){
+                var photo = document.createElement("div");
+                photo.className = "photo";
+                photo.style.backgroundImage = "url(" + task.assignee.photo.image_21x21 + ")";
+                photo.setAttribute("title", task.assignee.name);
+                ticket.appendChild(photo);
+              }
+
               currentLane.appendChild(ticket);
             }
           }
