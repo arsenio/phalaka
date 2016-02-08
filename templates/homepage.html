@@ -30,7 +30,14 @@
         <select id="projects">
           <option value="0">-- Choose a project</option>
         </select>
-        <div id="project-name"></div>
+        <div id="project-name">
+          <span></span>
+          <div class="settings-button"></div>
+          <div id="project-settings-pane" class="settings-pane">
+            <label for="swimlanes">Swimlanes?</label>
+            <input name="swimlanes" type="checkbox" value="1"/>
+          </div>
+        </div>
       </div>
       <div id="auth-username" class="username"></div>
     </div>

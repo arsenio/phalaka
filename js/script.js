@@ -4,6 +4,7 @@
   var members = {};
   var tasks = [];
   var wips = {};
+  var swimlanes = false;
 
   getHash();
 
@@ -110,8 +111,12 @@
         setHash();
         document.getElementById("projects").style.display = "none";
         var projectName = document.getElementById("project-name");
-        projectName.innerHTML = details.data.name;
+        projectName.querySelector("span").innerHTML = details.data.name;
+        projectName.querySelector(".settings-button").addEventListener("click", toggleProjectSettings);
         projectName.style.display = "inline-block";
+        var field = projectName.querySelector("#project-settings-pane input[name=swimlanes]");
+        field.setAttribute("checked", swimlanes);
+        field.addEventListener("change", setSwimlane);
         document.title = details.data.name;
         for(var i=0, x=details.data.members.length; i<x; i++){
           var member = details.data.members[i];
@@ -124,104 +129,127 @@
             tasks = tickets.data;
           }
 
-          var canvas = document.getElementById("canvas");
-          // Two task passes will save us hitting the API twice for this.
-          // Tasks Pass One: build the lanes (and pick up any missing
-          // users not assigned to the project overall).
-          for(var i=0, x=tasks.length; i<x; i++){
-            var task = tasks[i];
-            if(task.assignee){
-              members[task.assignee.id] = task.assignee.name;
-            }
-            if(task.name.endsWith(":")){
-              var laneName = task.name.substring(0, task.name.length - 1);
-              var lane = document.createElement("div");
-              lane.setAttribute("id", "lane-" + task.id);
-              lane.className = "lane";
-              var marker = document.createElement("div");
-              marker.className = "marker";
-              marker.innerHTML = laneName;
-              var settingsButton = document.createElement("div");
-              settingsButton.className = "settings-button";
-              settingsButton.addEventListener("click", toggleLaneSettings);
-              marker.appendChild(settingsButton);
-
-              var cloneable = document.getElementById("settings-pane-cloneable");
-              var pane = cloneable.cloneNode(true);
-              var field = pane.querySelector("input[name=wip]");
-              if(wips.hasOwnProperty(task.id)){
-                field.value = wips[task.id];
-              }else{
-                field.value = "";
-              }
-              field.addEventListener("change", setWIPLimit);
-              marker.appendChild(pane);
-
-              lane.appendChild(marker);
-              canvas.appendChild(lane);
-            }
-          }
-          // This is a good time to carve out assignee rows.
-          // TODO: make sense of this
-          var sortedMembers = [];
-          for(var key in members){
-            if(members.hasOwnProperty(key)){
-              sortedMembers.push([key, members[key]])
-            }
-          }
-          sortedMembers.sort(function(a, b){
-            return a[1].toLowerCase() > b[1].toLowerCase();
-          });
-
-          // We need to add dropzones to each lane
-          var lanes = canvas.querySelectorAll(".lane");
-          for(var i = 0, x=lanes.length; i<x; i++){
-            var lane = lanes[i];
-            var laneId = lane.getAttribute("id").replace("lane-", "")
-            var dropzone = document.createElement("div");
-            dropzone.setAttribute("id", "dropzone-" + laneId);
-            dropzone.className = "dropzone";
-            dropzone.addEventListener("drop", dragDrop);
-            dropzone.addEventListener("dragover", dragOver);
-            dropzone.addEventListener("dragleave", dragLeave);
-            lane.appendChild(dropzone);
-          }
-
-          // Tasks, Pass Two: add the uncompleted tasks to the lanes.
-          var currentLane = undefined;
-          var currentLaneId = undefined;
-          for(var i=0, x=tasks.length; i<x; i++){
-            var task = tasks[i];
-            if(task.name.endsWith(":")){
-              currentLaneId = task.id;
-              currentLane = document.getElementById("lane-" + currentLaneId);
-            }else if(currentLane){
-              if(task.completed){
-                continue;
-              }
-              var dropzone = document.getElementById("dropzone-" + currentLaneId);
-              var ticket = document.createElement("div");
-              ticket.setAttribute("id", "task-" + task.id);
-              ticket.className = "task";
-              ticket.setAttribute("draggable", "true");
-              ticket.innerHTML = task.name;
-              ticket.addEventListener("dragstart", dragStart);
-
-              if(task.assignee && task.assignee.photo && task.assignee.photo.image_21x21){
-                var photo = document.createElement("div");
-                photo.className = "photo";
-                photo.style.backgroundImage = "url(" + task.assignee.photo.image_21x21 + ")";
-                photo.setAttribute("title", task.assignee.name);
-                ticket.appendChild(photo);
-              }
-
-              dropzone.appendChild(ticket);
-            }
-          }
-          checkWIPLimits();
+          renderProject();
         });
       }
     });
+  }
+
+  function renderProject(){
+    var canvas = document.getElementById("canvas");
+
+    // Two task passes will save us hitting the API twice for this.
+    // Tasks Pass One: build the lanes (and pick up any missing
+    // users not assigned to the project overall).
+    for(var i=0, x=tasks.length; i<x; i++){
+      var task = tasks[i];
+      if(task.assignee){
+        members[task.assignee.id] = task.assignee.name;
+      }
+      if(task.name.endsWith(":")){
+        var laneName = task.name.substring(0, task.name.length - 1);
+        var lane = document.createElement("div");
+        lane.setAttribute("id", "lane-" + task.id);
+        lane.className = "lane";
+        var marker = document.createElement("div");
+        marker.className = "marker";
+        marker.innerHTML = laneName;
+        var settingsButton = document.createElement("div");
+        settingsButton.className = "settings-button";
+        settingsButton.addEventListener("click", toggleLaneSettings);
+        marker.appendChild(settingsButton);
+
+        var cloneable = document.getElementById("settings-pane-cloneable");
+        var pane = cloneable.cloneNode(true);
+        var field = pane.querySelector("input[name=wip]");
+        if(wips.hasOwnProperty(task.id)){
+          field.value = wips[task.id];
+        }else{
+          field.value = "";
+        }
+        field.addEventListener("change", setWIPLimit);
+        marker.appendChild(pane);
+
+        lane.appendChild(marker);
+        canvas.appendChild(lane);
+      }
+    }
+    // This is a good time to carve out assignee rows.
+    var sortedMembers = [];
+    for(var key in members){
+      if(members.hasOwnProperty(key)){
+        sortedMembers.push([key, members[key]])
+      }
+    }
+    sortedMembers.sort(function(a, b){
+      return a[1].toLowerCase() > b[1].toLowerCase();
+    });
+
+    // We need to add dropzones to each lane
+    var lanes = canvas.querySelectorAll(".lane");
+    for(var i = 0, x=lanes.length; i<x; i++){
+      var lane = lanes[i];
+      var laneId = lane.getAttribute("id").replace("lane-", "")
+      var dropzone = document.createElement("div");
+      dropzone.setAttribute("id", "dropzone-" + laneId);
+      dropzone.setAttribute("data-assignee", (swimlanes) ? "Unassigned" : "");
+      dropzone.className = "dropzone";
+      dropzone.addEventListener("drop", dragDrop);
+      dropzone.addEventListener("dragover", dragOver);
+      dropzone.addEventListener("dragleave", dragLeave);
+      lane.appendChild(dropzone);
+      if(swimlanes){
+        for(var j = 0, y=sortedMembers.length; j<y; j++){
+          var member = sortedMembers[j];
+          var memberId = member[0];
+          var memberName = member[1];
+          var dropzone = document.createElement("div");
+          dropzone.setAttribute("id", "dropzone-" + laneId + ":" + memberId);
+          dropzone.setAttribute("data-assignee", memberName);
+          dropzone.className = "dropzone";
+          dropzone.addEventListener("drop", dragDrop);
+          dropzone.addEventListener("dragover", dragOver);
+          dropzone.addEventListener("dragleave", dragLeave);
+
+          lane.appendChild(dropzone);
+        }
+      }
+    }
+
+    // Tasks, Pass Two: add the uncompleted tasks to the lanes.
+    var currentLaneId = undefined;
+    for(var i=0, x=tasks.length; i<x; i++){
+      var task = tasks[i];
+      if(task.name.endsWith(":")){
+        currentLaneId = task.id;
+      }else if(currentLaneId){
+        if(task.completed){
+          continue;
+        }
+        var dropzoneId = "dropzone-" + currentLaneId;
+        if(swimlanes && task.assignee && task.assignee.id){
+          dropzoneId += ":" + task.assignee.id;
+        }
+        var dropzone = document.getElementById(dropzoneId);
+        var ticket = document.createElement("div");
+        ticket.setAttribute("id", "task-" + task.id);
+        ticket.className = "task";
+        ticket.setAttribute("draggable", "true");
+        ticket.innerHTML = task.name;
+        ticket.addEventListener("dragstart", dragStart);
+
+        if(task.assignee && task.assignee.photo && task.assignee.photo.image_21x21){
+          var photo = document.createElement("div");
+          photo.className = "photo";
+          photo.style.backgroundImage = "url(" + task.assignee.photo.image_21x21 + ")";
+          photo.setAttribute("title", task.assignee.name);
+          ticket.appendChild(photo);
+        }
+
+        dropzone.appendChild(ticket);
+      }
+    }
+    checkWIPLimits();
   }
 
   // Drag and drop functionality
@@ -337,13 +365,25 @@
           var zone = zones[j];
           var taskCount = zone.querySelectorAll(".task").length;
           exceeded = (taskCount > limit);
-        }
-        zone.className = zone.className.replace(" wip", "");
-        if(exceeded){
-          zone.className = zone.className + " wip";
+          zone.className = zone.className.replace("wip", "");
+          if(exceeded){
+            zone.className = zone.className + " wip";
+          }
         }
       }
     }
+  }
+
+  // Swimlane functionality
+  function toggleProjectSettings(e){
+    e.preventDefault();
+    var pane = document.getElementById("project-settings-pane");
+    pane.style.display = (pane.style.display == "inline-block") ? "none": "inline-block";
+  }
+  function setSwimlane(e){
+    swimlanes = e.target.checked;
+    setHash();
+    window.location.reload();
   }
 
   // Hash handling
@@ -352,6 +392,10 @@
     if(hash.length){
       var hashParts = hash.split(";");
       boardProjectId = hashParts[0];
+      if(boardProjectId.startsWith("!")){
+        swimlanes = true;
+        boardProjectId = boardProjectId.substring(1);
+      }
       if(hashParts.length == 2){
         var hashLimits = hashParts[1].split(",");
         for(var i=0, x=hashLimits.length; i<x; i++){
@@ -371,7 +415,7 @@
         limitStrings.push(key + ":" + wips[key]);
       }
     }
-    var newHash = boardProjectId;
+    var newHash = (swimlanes ? "!" : "") + boardProjectId;
     if(limitStrings.length){
       newHash += ";" + limitStrings.sort().join(",");
     }
