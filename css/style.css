@@ -221,7 +221,7 @@ html, body {
   background-color: #fafbfc;
 }
 #canvas .lane .dropzone:before {
-  content: attr(data-assignee);
+  content: attr(data-assignee_name);
   font-size: 10px;
   display: inline-block;
   height: 10px;

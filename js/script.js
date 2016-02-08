@@ -150,6 +150,7 @@
         var laneName = task.name.substring(0, task.name.length - 1);
         var lane = document.createElement("div");
         lane.setAttribute("id", "lane-" + task.id);
+        lane.setAttribute("data-lane_id", task.id);
         lane.className = "lane";
         var marker = document.createElement("div");
         marker.className = "marker";
@@ -189,10 +190,10 @@
     var lanes = canvas.querySelectorAll(".lane");
     for(var i = 0, x=lanes.length; i<x; i++){
       var lane = lanes[i];
-      var laneId = lane.getAttribute("id").replace("lane-", "")
+      var laneId = lane.getAttribute("data-lane_id")
       var dropzone = document.createElement("div");
       dropzone.setAttribute("id", "dropzone-" + laneId);
-      dropzone.setAttribute("data-assignee", (swimlanes) ? "Unassigned" : "");
+      dropzone.setAttribute("data-assignee_name", (swimlanes) ? "Unassigned" : "");
       dropzone.className = "dropzone";
       dropzone.addEventListener("drop", dragDrop);
       dropzone.addEventListener("dragover", dragOver);
@@ -204,8 +205,10 @@
           var memberId = member[0];
           var memberName = member[1];
           var dropzone = document.createElement("div");
-          dropzone.setAttribute("id", "dropzone-" + laneId + ":" + memberId);
-          dropzone.setAttribute("data-assignee", memberName);
+          dropzone.setAttribute("id", "dropzone-" + laneId + "-" + memberId);
+          dropzone.setAttribute("data-lane_id", laneId);
+          dropzone.setAttribute("data-assignee_id", memberId);
+          dropzone.setAttribute("data-assignee_name", memberName);
           dropzone.className = "dropzone";
           dropzone.addEventListener("drop", dragDrop);
           dropzone.addEventListener("dragover", dragOver);
@@ -228,12 +231,13 @@
         }
         var dropzoneId = "dropzone-" + currentLaneId;
         if(swimlanes && task.assignee && task.assignee.id){
-          dropzoneId += ":" + task.assignee.id;
+          dropzoneId += "-" + task.assignee.id;
         }
         var dropzone = document.getElementById(dropzoneId);
         var ticket = document.createElement("div");
         ticket.setAttribute("id", "task-" + task.id);
         ticket.className = "task";
+        ticket.setAttribute("data-task_id", task.id);
         ticket.setAttribute("draggable", "true");
         ticket.innerHTML = task.name;
         ticket.addEventListener("dragstart", dragStart);
@@ -272,25 +276,40 @@
     e.preventDefault();
     var data = e.dataTransfer.getData("text");
     var task = document.getElementById(data);
+    var taskId = task.getAttribute("data-task_id");
 
     var container = e.target;
     var payload = {"project": boardProjectId};
     if(container.className.indexOf("task") >= 0){
-      payload["insert_before"] = container.id.replace("task-", "");
+      payload["insert_before"] = container.getAttribute("data-task_id");
       container.closest(".dropzone").insertBefore(task, container);
     }else{
       var laneTasks = document.querySelectorAll("#" + container.id + " .task");
       if(laneTasks.length){
         var final = laneTasks[laneTasks.length - 1];
-        payload["insert_after"] = final.id.replace("task-", "");
+        payload["insert_after"] = final.getAttribute("data-task_id");
       }else{
-        payload["section"] = container.id.replace("dropzone-", "");
+        payload["section"] = container.getAttribute("data-lane_id");
       }
       container.appendChild(task);
     }
     checkWIPLimits();
     dropzoneHide(e);
-    apiPost("/tasks/" + data.replace("task-", "") + "/addProject", payload);
+    apiPost("/tasks/" + taskId + "/addProject", payload, function(e){
+      if(swimlanes){
+        var targetAssigneeId = container.getAttribute("data-assignee_id") || "null";
+        for(var i=0, x=tasks.length; i<x; i++){
+          var storedTask = tasks[i];
+          if(storedTask.id == taskId){
+            var sourceAssigneeId = (storedTask.assignee && storedTask.assignee.id) ? storedTask.assignee.id : "null";
+            if(sourceAssigneeId != targetAssigneeId){
+              storedTask.assignee = {"id": targetAssigneeId, "name": members[targetAssigneeId]};
+              apiPut("/tasks/" + taskId, {"assignee": targetAssigneeId});
+            }
+          }
+        }
+      }
+    });
   }
 
   function dropzoneShow(e) {
@@ -342,7 +361,7 @@
   function setWIPLimit(e){
     var field = e.target;
     var lane = field.closest(".lane");
-    var laneId = lane.getAttribute("id").replace("lane-", "")
+    var laneId = lane.getAttribute("data-lane_id");
     var limit = parseInt(e.target.value, 10);
     if(!Number.isInteger(limit)){
       limit = 0;
@@ -356,7 +375,7 @@
     var lanes = document.querySelectorAll("#canvas .lane");
     for(var i=0, x=lanes.length; i<x; i++){
       var lane = lanes[i];
-      var laneId = lane.getAttribute("id").replace("lane-", "")
+      var laneId = lane.getAttribute("data-lane_id");
       if(wips.hasOwnProperty(laneId)){
         var limit = wips[laneId];
         var exceeded = false;
@@ -536,5 +555,12 @@ console.log("Fatal error: -2 (" + e);
       params = undefined;
     }
     _api("POST", endpoint, params, handler);
+  }
+  function apiPut(endpoint, params, handler){
+    if(typeof(params) == "function"){
+      handler = params;
+      params = undefined;
+    }
+    _api("PUT", endpoint, params, handler);
   }
 })();
