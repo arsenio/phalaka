@@ -35,7 +35,14 @@
     }
   }
   var username = getCookie("username");
-  document.getElementById("auth-username").innerHTML = username;
+  var accountElement = document.getElementById("auth-username");
+  accountElement.innerHTML = username;
+  accountElement.addEventListener("click", function(e){
+    e.preventDefault();
+    deleteAllCookies();
+    window.location.reload();
+  });
+
 
   document.getElementById("workspaces").addEventListener("change", function(e){
     var workspaceId = e.target.value;
@@ -464,6 +471,16 @@
     expiry.setDate(expiry.getDate() + 30);
     document.cookie = cookieName + "=" + value
                     + ";path=/;expires=" + expiry.toUTCString();
+  }
+
+  function deleteAllCookies(){
+    var cookies = document.cookie.split(";");
+    for(var i = 0, x=cookies.length; i<x; i++){
+      var cookie = cookies[i];
+      var eqPos = cookie.indexOf("=");
+      var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+      document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    }
   }
 
   function _xhrOnLoad(){
