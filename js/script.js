@@ -137,6 +137,12 @@
 
   function renderProject(){
     var canvas = document.getElementById("canvas");
+    var tableHead = canvas.querySelector("thead");
+    var tableBody = canvas.querySelector("tbody");
+
+    var spacer = document.createElement("th");
+    spacer.className = "assignee";
+    tableHead.appendChild(spacer);
 
     // Two task passes will save us hitting the API twice for this.
     // Tasks Pass One: build the lanes (and pick up any missing
@@ -148,12 +154,10 @@
       }
       if(task.name.endsWith(":")){
         var laneName = task.name.substring(0, task.name.length - 1);
-        var lane = document.createElement("div");
-        lane.setAttribute("id", "lane-" + task.id);
-        lane.setAttribute("data-lane_id", task.id);
-        lane.className = "lane";
-        var marker = document.createElement("div");
+        var marker = document.createElement("th");
         marker.className = "marker";
+        marker.setAttribute("id", "lane-" + task.id);
+        marker.setAttribute("data-lane_id", task.id);
         marker.innerHTML = laneName;
         var settingsButton = document.createElement("div");
         settingsButton.className = "settings-button";
@@ -171,11 +175,12 @@
         field.addEventListener("change", setWIPLimit);
         marker.appendChild(pane);
 
-        lane.appendChild(marker);
-        canvas.appendChild(lane);
+        tableHead.appendChild(marker);
       }
     }
-    // This is a good time to carve out assignee rows.
+
+    // We'll set up the needed grid of table rows and cells, based on
+    // assignees (or one catchall if swimlanes are disabled).
     var sortedMembers = [];
     for(var key in members){
       if(members.hasOwnProperty(key)){
@@ -185,38 +190,34 @@
     sortedMembers.sort(function(a, b){
       return a[1].toLowerCase() > b[1].toLowerCase();
     });
-
-    // We need to add dropzones to each lane
-    var lanes = canvas.querySelectorAll(".lane");
-    for(var i = 0, x=lanes.length; i<x; i++){
-      var lane = lanes[i];
-      var laneId = lane.getAttribute("data-lane_id")
-      var dropzone = document.createElement("div");
-      dropzone.setAttribute("id", "dropzone-" + laneId);
-      dropzone.setAttribute("data-assignee_name", (swimlanes) ? "Unassigned" : "");
-      dropzone.className = "dropzone";
-      dropzone.addEventListener("drop", dragDrop);
-      dropzone.addEventListener("dragover", dragOver);
-      dropzone.addEventListener("dragleave", dragLeave);
-      lane.appendChild(dropzone);
-      if(swimlanes){
-        for(var j = 0, y=sortedMembers.length; j<y; j++){
-          var member = sortedMembers[j];
-          var memberId = member[0];
-          var memberName = member[1];
-          var dropzone = document.createElement("div");
-          dropzone.setAttribute("id", "dropzone-" + laneId + "-" + memberId);
-          dropzone.setAttribute("data-lane_id", laneId);
-          dropzone.setAttribute("data-assignee_id", memberId);
-          dropzone.setAttribute("data-assignee_name", memberName);
-          dropzone.className = "dropzone";
-          dropzone.addEventListener("drop", dragDrop);
-          dropzone.addEventListener("dragover", dragOver);
-          dropzone.addEventListener("dragleave", dragLeave);
-
-          lane.appendChild(dropzone);
+    sortedMembers.unshift([0, (swimlanes ? "Unassigned" : "")]);
+    var lanes = canvas.querySelectorAll("th.marker");
+    for(var i = 0, x=(swimlanes ? sortedMembers.length : 1); i<x; i++){
+      var member = sortedMembers[i];
+      var memberId = member[0];
+      var memberName = member[1];
+      var row = document.createElement("tr");
+      var rowStart = document.createElement("td");
+      rowStart.className = "assignee";
+      rowStart.innerHTML = memberName;
+      row.appendChild(rowStart);
+      for(var j = 0, y=lanes.length; j<y; j++){
+        var laneId = lanes[j].getAttribute("data-lane_id");
+        var cell = document.createElement("td");
+        var cellId = "dropzone-" + laneId;
+        if(memberId){
+          cellId += "-" + memberId;
         }
+        cell.setAttribute("id", cellId);
+        cell.setAttribute("data-lane_id", laneId);
+        cell.setAttribute("data-assignee_id", (memberId || "null"));
+        cell.className = "dropzone";
+        cell.addEventListener("drop", dragDrop);
+        cell.addEventListener("dragover", dragOver);
+        cell.addEventListener("dragleave", dragLeave);
+        row.appendChild(cell);
       }
+      tableBody.appendChild(row);
     }
 
     // Tasks, Pass Two: add the uncompleted tasks to the lanes.
@@ -360,34 +361,35 @@
   }
   function setWIPLimit(e){
     var field = e.target;
-    var lane = field.closest(".lane");
-    var laneId = lane.getAttribute("data-lane_id");
+    var marker = field.closest(".marker");
+    var laneId = marker.getAttribute("data-lane_id");
     var limit = parseInt(e.target.value, 10);
     if(!Number.isInteger(limit)){
       limit = 0;
     }
-    wips[laneId] = limit;
-    field.value = limit;
+    if(limit){
+      wips[laneId] = limit;
+      field.value = limit;
+    }else{
+      delete wips[laneId];
+      field.value = "";
+    }
     setHash();
     checkWIPLimits();
   }
   function checkWIPLimits(){
-    var lanes = document.querySelectorAll("#canvas .lane");
-    for(var i=0, x=lanes.length; i<x; i++){
-      var lane = lanes[i];
-      var laneId = lane.getAttribute("data-lane_id");
+    var dropzones = document.querySelectorAll("#canvas .dropzone");
+    for(var i=0, x=dropzones.length; i<x; i++){
+      var dropzone = dropzones[i];
+      dropzone.className = dropzone.className.replace("wip", "");
+      var laneId = dropzone.getAttribute("data-lane_id");
       if(wips.hasOwnProperty(laneId)){
         var limit = wips[laneId];
         var exceeded = false;
-        var zones = lane.querySelectorAll(".dropzone");
-        for(var j=0, y=zones.length; j<y; j++){
-          var zone = zones[j];
-          var taskCount = zone.querySelectorAll(".task").length;
-          exceeded = (taskCount > limit);
-          zone.className = zone.className.replace("wip", "");
-          if(exceeded){
-            zone.className = zone.className + " wip";
-          }
+        var taskCount = dropzone.querySelectorAll(".task").length;
+        exceeded = (taskCount > limit);
+        if(exceeded){
+          dropzone.className = dropzone.className + " wip";
         }
       }
     }

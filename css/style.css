@@ -158,47 +158,39 @@ html, body {
 
 #canvas {
   position: absolute;
-  display: flex;
   flex-direction: row;
-  align-items: flex-start;
   top: 20px;
   left: 0;
   padding: 20px 10px;
   font-size: 18px;
   line-height: 2em;
+  border-collapse: separate;
+  border-spacing: 5px 0;
 }
 
-#canvas .lane {
+#canvas .marker {
   position: relative;
-  display: inline-block;
   background-color: #fff;
   border: solid 1px #ccc;
-  width: 200px;
-  min-height: 100vw;
-  padding: 0 5px;
-  margin-right: 10px;
-}
-
-#canvas .lane .marker {
-  position: relative;
-  display: block;
-  width: 100%;
   font-size: 15px;
   font-weight: bold;
   line-height: 1em;
   padding: 5px 5px 20px;
-  margin: 0 -5px;
+  width: 200px;
+  height: 25px;
+  padding: 0 5px;
+  margin: 0 20px;
   text-align: center;
 }
 
-#canvas .lane .marker .settings-button {
+#canvas .marker .settings-button {
   position: absolute;
   top: 0px;
   right: 0px;
   z-index: 1;
 }
 
-#canvas .lane .marker .settings-pane {
+#canvas .marker .settings-pane {
   top: 30px;
   right: 5px;
 }
@@ -208,38 +200,40 @@ html, body {
   font-weight: normal;
 }
 
-#canvas .lane .dropzone {
-  display: block;
-  padding: 20px 0;
-  border: solid 1px #fff;
-  width: 100%;
-  margin: 0;
-  position: flex;
-  z-index: 1;
-}
-#canvas .lane .dropzone:hover {
-  background-color: #fafbfc;
-}
-#canvas .lane .dropzone:before {
-  content: attr(data-assignee_name);
-  font-size: 10px;
-  display: inline-block;
-  height: 10px;
-  margin-top: -28px;
-  position: absolute;
-  margin-left: 5px;
-  color: #aaa;
+#canvas .assignee {
+  font-size: 11px;
+  width: 40px;
+  text-align: center;
+  line-height: 1em;
+  font-weight: 100;
 }
 
-#canvas .lane .dropzone.active {
+#canvas .dropzone {
+  background-color: #fff;
+  border-left: solid 1px #e2e9f2;
+  border-right: solid 1px #e2e9f2;
+  border-top: solid 1px #fff;
+  border-bottom: dotted 1px #ddd;
+  width: 200px;
+  height: 60px;
+  margin: 0;
+  padding: 10px 0;
+  text-align: left;
+  vertical-align: top;
+}
+#canvas .dropzone:hover {
+  background-color: #fafbfc;
+}
+
+#canvas .dropzone.active {
   border: dotted 1px #55f;
 }
 
-#canvas .lane .dropzone.wip {
+#canvas .dropzone.wip {
   background-color: #fdd;
 }
 
-#canvas .lane .dropzone .assignee {
+#canvas .dropzone .assignee {
   font-size: 11px;
   color: #bbb;
   font-variant: small-caps;
@@ -248,7 +242,7 @@ html, body {
   margin-left: 5px;
 }
 
-#canvas .lane .task {
+#canvas .task {
   position: relative;
   display: inline-block;
   width: 64px;
@@ -263,7 +257,7 @@ html, body {
   cursor: move;
 }
 
-#canvas .lane .task .photo {
+#canvas .task .photo {
   position: absolute;
   bottom: 2px;
   right: 2px;
