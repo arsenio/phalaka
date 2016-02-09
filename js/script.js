@@ -115,7 +115,9 @@
         projectName.querySelector(".settings-button").addEventListener("click", toggleProjectSettings);
         projectName.style.display = "inline-block";
         var field = projectName.querySelector("#project-settings-pane input[name=swimlanes]");
-        field.setAttribute("checked", swimlanes);
+        if(swimlanes){
+          field.setAttribute("checked", "checked");
+        }
         field.addEventListener("change", setSwimlane);
         document.title = details.data.name;
         for(var i=0, x=details.data.members.length; i<x; i++){
@@ -199,7 +201,7 @@
       var row = document.createElement("tr");
       var rowStart = document.createElement("td");
       rowStart.className = "assignee";
-      rowStart.innerHTML = memberName;
+      rowStart.innerHTML = memberName.replace(" ", "<br/>");
       row.appendChild(rowStart);
       for(var j = 0, y=lanes.length; j<y; j++){
         var laneId = lanes[j].getAttribute("data-lane_id");
@@ -242,14 +244,6 @@
         ticket.setAttribute("draggable", "true");
         ticket.innerHTML = task.name;
         ticket.addEventListener("dragstart", dragStart);
-
-        if(task.assignee && task.assignee.photo && task.assignee.photo.image_21x21){
-          var photo = document.createElement("div");
-          photo.className = "photo";
-          photo.style.backgroundImage = "url(" + task.assignee.photo.image_21x21 + ")";
-          photo.setAttribute("title", task.assignee.name);
-          ticket.appendChild(photo);
-        }
 
         dropzone.appendChild(ticket);
       }

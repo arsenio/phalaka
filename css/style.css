@@ -158,9 +158,9 @@ html, body {
 
 #canvas {
   position: absolute;
-  flex-direction: row;
   top: 20px;
   left: 0;
+  height: 80vh;
   padding: 20px 10px;
   font-size: 18px;
   line-height: 2em;
@@ -190,6 +190,13 @@ html, body {
   z-index: 1;
 }
 
+#canvas tbody tr {
+  height: 50px;
+}
+#canvas tbody tr:only-child {
+  height: 90%;
+}
+
 #canvas .marker .settings-pane {
   top: 30px;
   right: 5px;
@@ -215,7 +222,7 @@ html, body {
   border-top: solid 1px #fff;
   border-bottom: dotted 1px #ddd;
   width: 200px;
-  height: 60px;
+  height: 100%;
   margin: 0;
   padding: 10px 0;
   text-align: left;
@@ -255,18 +262,6 @@ html, body {
   background-color: #ffffa5;
   box-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
   cursor: move;
-}
-
-#canvas .task .photo {
-  position: absolute;
-  bottom: 2px;
-  right: 2px;
-  width: 16px;
-  height: 16px;
-  border-radius: 11px;
-  z-index: 1;
-  opacity: 0.6;
-  background-size: 16px 16px;
 }
 
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
