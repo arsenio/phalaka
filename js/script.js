@@ -6,6 +6,8 @@
   var wips = {};
   var swimlanes = false;
 
+  var locale = getLocale();
+
   getHash();
 
   // Handle initial authentication
@@ -251,6 +253,7 @@
         ticket.setAttribute("draggable", "true");
         ticket.innerHTML = task.name;
         ticket.addEventListener("dragstart", dragStart);
+        ticket.addEventListener("dblclick", revealTaskDetail);
 
         dropzone.appendChild(ticket);
       }
@@ -346,6 +349,115 @@
     if(container.className && container.className.indexOf("dropzone") >= 0){
       container.className = container.className.replace(" active", "");
     }
+  }
+
+  // Task detail functionality
+  document.getElementById("task-complete").addEventListener("click", function(e){
+    var taskDetail = document.getElementById("task-detail");
+    var taskId = taskDetail.getAttribute("data-task_id");
+    document.getElementById("detail-spinner").style.display = "block";
+    apiPut("/tasks/" + taskId, {"completed": true}, function(e){
+      closeTaskDetail(e);
+      var ticket = document.getElementById("task-" + taskId);
+      ticket.parentNode.removeChild(ticket);
+    });
+  });
+
+  document.getElementById("task-close").addEventListener("click", closeTaskDetail);
+
+  function closeTaskDetail(e){
+    var taskDetail = document.getElementById("task-detail");
+    taskDetail.setAttribute("data-task_id", "");
+    taskDetail.className = "slide-close";
+  }
+
+  function revealTaskDetail(e){
+    e.preventDefault();
+    var ticket = e.target;
+    var ticketId = e.target.getAttribute("data-task_id");
+    if(!ticketId){
+      return;
+    }
+    var ticketName = "";
+    for(var i=0, x=tasks.length; i<x; i++){
+      var task = tasks[i];
+      if(task.id == ticketId){
+        ticketName = task.name;
+        break;
+      }
+    }
+
+    var detailSpinner = document.getElementById("detail-spinner");
+    detailSpinner.style.display = "block";
+
+    var taskDetail = document.getElementById("task-detail");
+    taskDetail.setAttribute("data-task_id", ticketId);
+    taskDetail.querySelector(".title").innerHTML = ticketName;
+    if(taskDetail.className.indexOf("slide-open") < 0){
+      taskDetail.className = "slide-open";
+    }
+
+    var notes = taskDetail.querySelector(".notes");
+    notes.innerHTML = "";
+
+    var comments = taskDetail.querySelectorAll(".story");
+    for(var i=comments.length - 1; i>=0; i--){
+      taskDetail.removeChild(comments[i]);
+    }
+
+    var payload = {"opt_fields": "name,notes,created_by,created_by.name,html_text"};
+    apiGet("/tasks/" + ticketId, payload, function(details){
+      if(details.data){
+        notes.innerHTML = addLinks(details.data.notes);
+      }
+
+      var params = {"opt_fields": "type,created_at,created_by,created_by.name,html_text"};
+      apiGet("/tasks/" + ticketId + "/stories", params, function(stories){
+        detailSpinner.style.display = "none";
+        if(stories.data){
+          for(var i=0, x=stories.data.length; i<x; i++){
+            var story = stories.data[i];
+
+            var comment = document.createElement("div");
+            var style = "story";
+            if(story.type == "comment"){
+              style += " comment";
+            }
+            comment.className = style;
+
+            var author = document.createElement("span");
+            author.className = "creator";
+            author.innerHTML = story.created_by.name;
+
+            var text = document.createElement("span");
+            text.className = "text";
+            text.innerHTML = story.html_text;
+
+            var timestamp = document.createElement("span");
+            timestamp.className = "timestamp";
+            var storyDateObj = new Date(story.created_at);
+            var dateString = getDateString(storyDateObj);
+            var timeString = getTimeString(storyDateObj);
+            if(story.type == "comment"){
+              timestamp.innerHTML = dateString + " at " + timeString;
+            }else{
+              timestamp.innerHTML = dateString;
+              timestamp.setAttribute("title", dateString + " at " + timeString);
+            }
+
+            comment.appendChild(author);
+            if(story.type == "comment"){
+              comment.appendChild(timestamp);
+              comment.appendChild(text);
+            }else{
+              comment.appendChild(text);
+              comment.appendChild(timestamp);
+            }
+            taskDetail.appendChild(comment);
+          }
+        }
+      });
+    });
   }
 
   // WIP limit functionality
@@ -454,6 +566,42 @@
   });
 
   // Utility functions
+  function addLinks(text){
+    var urlRegex =/(\bhttps?:\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+    return text.replace(urlRegex, function(url) {
+        return "<a target=\"_blank\" href=\"" + url + "\">" + url + "</a>";
+    });
+  }
+
+  function getLocale(){
+    return navigator.languages || navigator.userLanguage || navigator.language;
+  }
+
+  function getDateString(dateObj){
+    var ref = new Date();
+    if(dateObj.getMonth() == ref.getMonth() &&
+       dateObj.getDate() == ref.getDate() &&
+       dateObj.getFullYear() == ref.getFullYear()){
+      return "Today";
+    }
+
+    ref.setDate(ref.getDate() - 1);
+    if(dateObj.getMonth() == ref.getMonth() &&
+       dateObj.getDate() == ref.getDate() &&
+       dateObj.getFullYear() == ref.getFullYear()){
+      return "Yesterday";
+    }
+
+    var options = {"year": "numeric", "month": "short", "day": "numeric"};
+    return dateObj.toLocaleDateString(locale, options);
+  };
+
+  function getTimeString(dateObj){
+    var options = {"hour12": true, "hours": "2-digit", "seconds": "2-digit"}
+    return dateObj.toLocaleTimeString(locale, options);
+  };
+
+  // Cookie functions
   function getCookie(cookieName){
     var rawCookies = document.cookie.split("; ");
 
@@ -483,6 +631,7 @@
     }
   }
 
+  // API functions
   function _xhrOnLoad(){
     if(this.status == 401){
       var reauth = false;

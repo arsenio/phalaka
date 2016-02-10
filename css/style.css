@@ -5,6 +5,14 @@ html, body {
   width: 100%;
 }
 
+a, a:visited {
+  color: #1aafd0;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
 #authenticate {
   margin: 15% 25%;
   padding: 10px 25px;
@@ -57,7 +65,7 @@ html, body {
   background-color: #fbfcfd;
   padding: 8px 15px;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-  z-index: 10;
+  z-index: 30;
 }
 
 #board .navbar .brand {
@@ -139,7 +147,7 @@ html, body {
   font-size: 15px;
 }
 
-#spinner, #auth-spinner {
+#spinner, #auth-spinner, #detail-spinner {
   display: none;
   background-image: url("../imgs/spinner.gif");
   width: 26px;
@@ -155,6 +163,11 @@ html, body {
 #auth-spinner {
   margin-top: 5px;
 }
+
+#detail-spinner {
+  margin-top: 20px;
+}
+
 
 #canvas {
   position: absolute;
@@ -262,6 +275,142 @@ html, body {
   background-color: #ffffa5;
   box-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
   cursor: move;
+}
+
+@keyframes slidein {
+  from {
+    right: -40%;
+  }
+  to {
+    right: 0;
+  }
+}
+@keyframes slideout {
+  from {
+    right: 0;
+  }
+  to {
+    right: -40%;
+  }
+}
+
+#task-detail {
+  position: fixed;
+  top: 0;
+  right: -40%;
+  width: 30%;
+  height: 90vh;
+  padding: 45px 15px;
+  background-color: #fff;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  z-index: 20;
+  overflow-y: scroll;
+}
+#task-detail.slide-open {
+  animation-duration: 0.3s;
+  animation-name: slidein;
+  animation-fill-mode: forwards;
+}
+#task-detail.slide-close {
+  animation-duration: 0.3s;
+  animation-name: slideout;
+  animation-fill-mode: forwards;
+}
+
+#task-complete, #task-close {
+  width: 30px;
+  height: 30px;
+  font-size: 20px;
+  color: #ccc;
+  border: solid 1px #ccc;
+  border-radius: 16px;
+  text-align: center;
+  display: inline-block;
+  line-height: 30px;
+  cursor: pointer;
+  z-index: 1;
+}
+#task-complete {
+  position: absolute;
+  top: 45px;
+  left: 10px;
+}
+#task-complete:hover {
+  color: #3bf7d1;
+  border: solid 1px #3bf7d1;
+  box-shadow: 0 0 5px #3bf7d1;
+}
+#task-close {
+  position: absolute;
+  top: 45px;
+  right: 10px;
+}
+#task-close:hover {
+  color: #c33;
+  border: solid 1px #c33;
+  box-shadow: 0 0 5px #c33;
+}
+
+#task-detail div:nth-child(1n+3) {
+  position: relative;
+  margin-left: 35px;
+  margin-right: 30px;
+}
+
+#task-detail .title {
+  font-size: 26px;
+  line-height: 1.25em;
+}
+
+#task-detail .notes {
+  margin-top: 20px;
+  font-size: 16px;
+  line-height: 1.3em;
+  letter-spacing: 0.2px;
+  margin-bottom: 10px;
+}
+
+#task-detail .story {
+  margin-right: 20px!important;
+}
+
+#task-detail .story.comment {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+#task-detail .story:last-child {
+  margin-bottom: 80px!important;
+}
+
+#task-detail .story span {
+  display: inline;
+  font-size: 12px;
+  line-height: 1.0em;
+  color: #888;
+}
+
+#task-detail .story .creator {
+  font-weight: bold;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  margin-right: 0.3em;
+}
+
+#task-detail .story.comment .creator {
+  font-size: 14px;
+  color: #333;
+}
+
+#task-detail .story.comment .text {
+  display:block;
+  font-size: 14px;
+  line-height: 1.3em;
+  color: #333;
+}
+
+#task-detail .story .timestamp {
+  padding-left: 10px;
 }
 
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
