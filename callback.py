@@ -1,47 +1,53 @@
 from __future__ import absolute_import
 
-import requests
+import os
 
-from cgi import parse_qs
+activate_this = "{}/venv/bin/activate_this.py".format(os.path.dirname(os.path.abspath(__file__)))
+execfile(activate_this, dict(__file__=activate_this))
 
 import Cookie
 import datetime
 
-if __package__ is None:
-    from os import sys, path
-    sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-
-from phalaka import config
-
 def application(environ, start_response):
-    qs = parse_qs(environ["QUERY_STRING"])
-    state = qs.get("state")
-    if isinstance(state, list):
-        state = state[0]
-
-    code = qs.get("code")
-    refresh = qs.get("refresh")
-
-    output = ""
-
-    headers = []
-
-    payload = {
-        "client_id": config.ASANA_CLIENT_ID,
-        "client_secret": config.ASANA_CLIENT_SECRET,
-        "redirect_uri": config.ASANA_REDIRECT_URI,
-    }
-
     payloaded = False
 
-    if code:
-        payload["grant_type"] = "authorization_code"
-        payload["code"] = code
-        payloaded = True
-    elif refresh:
-        payload["grant_type"] = "refresh_token"
-        payload["refresh_token"] = refresh
-        payloaded = True
+    try:
+        import requests
+
+        from cgi import parse_qs
+
+        from phalaka import config
+
+        qs = parse_qs(environ["QUERY_STRING"])
+        state = qs.get("state")
+        if isinstance(state, list):
+            state = state[0]
+
+        code = qs.get("code")
+        refresh = qs.get("refresh")
+
+        output = ""
+
+        headers = []
+
+        payload = {
+            "client_id": config.ASANA_CLIENT_ID,
+            "client_secret": config.ASANA_CLIENT_SECRET,
+            "redirect_uri": config.ASANA_REDIRECT_URI,
+        }
+
+        if code:
+            payload["grant_type"] = "authorization_code"
+            payload["code"] = code
+            payloaded = True
+        elif refresh:
+            payload["grant_type"] = "refresh_token"
+            payload["refresh_token"] = refresh
+            payloaded = True
+
+    except Exception, e:
+        start_response("500 System Error", [])
+        return ["{}".format(e)]
 
     if payloaded:
         status = "200 OK"

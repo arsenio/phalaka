@@ -2,23 +2,23 @@ from __future__ import absolute_import
 
 import os
 
-from jinja2 import Environment, FileSystemLoader
+activate_this = "{}/venv/bin/activate_this.py".format(os.path.dirname(os.path.abspath(__file__)))
+execfile(activate_this, dict(__file__=activate_this))
 
 def application(environ, start_response):
     status = "200 OK"
     headers = [('Content-type', 'text/html')]
     output = "okee"
 
-    if __package__ is None:
-        from os import sys, path
-        sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-
     try:
+        from jinja2 import Environment, FileSystemLoader
+
+        from phalaka import config
+
         template_dir = os.path.join(os.path.dirname(__file__), "templates")
         env = Environment(loader=FileSystemLoader(template_dir))
         template = env.get_template("homepage.html")
 
-        from phalaka import config
         output = template.render(ASANA_CLIENT_ID=config.ASANA_CLIENT_ID,
                                  ASANA_REDIRECT_URI=config.ASANA_REDIRECT_URI)
     except Exception, e:
