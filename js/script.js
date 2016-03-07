@@ -1,14 +1,36 @@
 (function(){
   var boardProjectId = "";
+  var backlog = "";
   var projects = {};
   var members = {};
   var tasks = [];
   var wips = {};
   var swimlanes = false;
 
+  var BACKLOG_NONE = -1;
+  var BACKLOG_NO_SECTION = -2;
+
   var locale = getLocale();
 
   getHash();
+
+  // Fill in the backlog options
+  var backlogOptions = document.getElementById("backlog");
+  var optionNone = document.createElement("option");
+  optionNone.setAttribute("value", BACKLOG_NONE);
+  if(backlog == BACKLOG_NONE){
+    optionNone.setAttribute("selected", "selected");
+  }
+  optionNone.innerHTML = "No backlog shown";
+  backlogOptions.appendChild(optionNone);
+  var optionNoSection = document.createElement("option");
+  optionNoSection.setAttribute("value", BACKLOG_NO_SECTION);
+  if(backlog == BACKLOG_NO_SECTION){
+    optionNoSection.setAttribute("selected", "selected");
+  }
+  optionNoSection.innerHTML = "All tasks without a section";
+  backlogOptions.appendChild(optionNoSection);
+
 
   // Handle initial authentication
   var authButton = document.getElementById("authenticate");
@@ -45,6 +67,12 @@
     window.location.reload();
   });
 
+
+  document.getElementById("backlog").addEventListener("change", function(e){
+    backlog = e.target.value;
+    setHash();
+    window.location.reload();
+  });
 
   document.getElementById("workspaces").addEventListener("change", function(e){
     var workspaceId = e.target.value;
@@ -146,6 +174,34 @@
     });
   }
 
+  function renderLane(id, name, parent){
+    var marker = document.createElement("th");
+    marker.className = "marker";
+    marker.setAttribute("id", "lane-" + id);
+    marker.setAttribute("data-lane_id", id);
+    marker.innerHTML = name;
+
+    if(id > 0){
+      var settingsButton = document.createElement("div");
+      settingsButton.className = "settings-button";
+      settingsButton.addEventListener("click", toggleLaneSettings);
+      marker.appendChild(settingsButton);
+
+      var cloneable = document.getElementById("settings-pane-cloneable");
+      var pane = cloneable.cloneNode(true);
+      var field = pane.querySelector("input[name=wip]");
+      if(wips.hasOwnProperty(id)){
+        field.value = wips[id];
+      }else{
+        field.value = "";
+      }
+      field.addEventListener("change", setWIPLimit);
+      marker.appendChild(pane);
+    }
+
+    parent.appendChild(marker);
+  }
+
   function renderProject(){
     var canvas = document.getElementById("canvas");
     var tableHead = canvas.querySelector("thead");
@@ -158,35 +214,16 @@
     // Two task passes will save us hitting the API twice for this.
     // Tasks Pass One: build the lanes (and pick up any missing
     // users not assigned to the project overall).
+    if(backlog == BACKLOG_NO_SECTION){
+      renderLane(BACKLOG_NO_SECTION, "Backlog", tableHead);
+    }
     for(var i=0, x=tasks.length; i<x; i++){
       var task = tasks[i];
       if(task.assignee){
         members[task.assignee.id] = task.assignee.name;
       }
       if(task.name.endsWith(":")){
-        var laneName = task.name.substring(0, task.name.length - 1);
-        var marker = document.createElement("th");
-        marker.className = "marker";
-        marker.setAttribute("id", "lane-" + task.id);
-        marker.setAttribute("data-lane_id", task.id);
-        marker.innerHTML = laneName;
-        var settingsButton = document.createElement("div");
-        settingsButton.className = "settings-button";
-        settingsButton.addEventListener("click", toggleLaneSettings);
-        marker.appendChild(settingsButton);
-
-        var cloneable = document.getElementById("settings-pane-cloneable");
-        var pane = cloneable.cloneNode(true);
-        var field = pane.querySelector("input[name=wip]");
-        if(wips.hasOwnProperty(task.id)){
-          field.value = wips[task.id];
-        }else{
-          field.value = "";
-        }
-        field.addEventListener("change", setWIPLimit);
-        marker.appendChild(pane);
-
-        tableHead.appendChild(marker);
+        renderLane(task.id, task.name.substring(0, task.name.length - 1), tableHead);
       }
     }
 
@@ -232,12 +269,12 @@
     }
 
     // Tasks, Pass Two: add the uncompleted tasks to the lanes.
-    var currentLaneId = undefined;
+    var currentLaneId = backlog;
     for(var i=0, x=tasks.length; i<x; i++){
       var task = tasks[i];
       if(task.name.endsWith(":")){
         currentLaneId = task.id;
-      }else if(currentLaneId){
+      }else if(currentLaneId > 0 || backlog == BACKLOG_NO_SECTION){
         if(task.completed){
           continue;
         }
@@ -294,7 +331,12 @@
         var final = laneTasks[laneTasks.length - 1];
         payload["insert_after"] = final.getAttribute("data-task_id");
       }else{
-        payload["section"] = container.getAttribute("data-lane_id");
+        var laneId = container.getAttribute("data-lane_id");
+        if(laneId > 0){
+          payload["section"] = container.getAttribute("data-lane_id");
+        }else{
+          payload["insert_after"] = null;
+        }
       }
       container.appendChild(task);
     }
@@ -524,7 +566,12 @@
   function getHash(){
     var hash = document.location.hash.replace("#", "");
     if(hash.length){
-      var hashParts = hash.split(";");
+      var hashWords = hash.split("+");
+      var firstHashWord = hashWords[0];
+      if(hashWords.length == 2){
+        backlog = hashWords[1];
+      }
+      var hashParts = firstHashWord.split(";");
       boardProjectId = hashParts[0];
       if(boardProjectId.startsWith("!")){
         swimlanes = true;
@@ -552,6 +599,9 @@
     var newHash = (swimlanes ? "!" : "") + boardProjectId;
     if(limitStrings.length){
       newHash += ";" + limitStrings.sort().join(",");
+    }
+    if(backlog){
+      newHash += "+" + backlog;
     }
     document.location.hash = newHash;
   }
