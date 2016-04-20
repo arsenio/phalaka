@@ -219,6 +219,9 @@
     }
     for(var i=0, x=tasks.length; i<x; i++){
       var task = tasks[i];
+      if(task.completed){
+        continue;
+      }
       if(task.assignee){
         members[task.assignee.id] = task.assignee.name;
       }
@@ -288,7 +291,7 @@
         ticket.className = "task";
         ticket.setAttribute("data-task_id", task.id);
         ticket.setAttribute("draggable", "true");
-        ticket.innerHTML = task.name;
+        ticket.innerHTML = htmlSafe(task.name);
         ticket.addEventListener("dragstart", dragStart);
         ticket.addEventListener("dblclick", revealTaskDetail);
 
@@ -621,6 +624,12 @@
     return text.replace(urlRegex, function(url) {
         return "<a target=\"_blank\" href=\"" + url + "\">" + url + "</a>";
     });
+  }
+
+  function htmlSafe(text){
+    text = text.replace(/</g, '&lt;');
+    text = text.replace(/>/g, '&gt;');
+    return text;
   }
 
   function getLocale(){
