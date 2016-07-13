@@ -1,6 +1,6 @@
 html, body {
-  background-color: #e2e9f2;
-  font-family: 'Source Sans Pro', sans-serif;
+  background-color: #f1edf2;
+  font-family: HelveticaNeue-Medium, Helvetica, Arial, sans-serif;
   height: 100%;
   width: 100%;
 }
@@ -61,9 +61,10 @@ a:hover {
   top: 0;
   left: 0;
   width: 100%;
-  height: 16px;
-  background-color: #fbfcfd;
-  padding: 8px 15px;
+  height: 58px;
+  padding: 0 20px;
+  color: #f1edf2;
+  background-color: #782f75;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
   z-index: 30;
 }
@@ -71,26 +72,33 @@ a:hover {
 #board .navbar .brand {
   position: fixed;
   display: block;
-  background-image: url("../imgs/logo.png");
-  top: 4px;
-  left: 10px;
-  width: 24px;
-  height: 24px;
-  text-indent: -9999px;
+  background-image: url("../imgs/logo.svg");
+  font: 24px/34px 'Asap', sans-serif;
+  letter-spacing: 1.7px;
+  color: #f1edf2;
+  background-size: 37px 36px;
+  top: 12px;
+  left: 19px;
+  width: 37px;
+  height: 36px;
+  text-indent: 50px;
+  text-transform: uppercase;
 }
 
 #board .navbar .username {
   position: fixed;
   display: block;
-  top: 7px;
-  right: 15px;
-  height: 24px;
-  font-size: 14px;
+  top: 24px;
+  right: 25px;
+  height: 14px;
+  font: 12px 'Asap', sans-serif;
+  letter-spacing: 0.9px;
   cursor: pointer;
 }
 
 #board .navbar .scope {
   text-align: center;
+  height: 58px;
 }
 
 #board .navbar .scope>select {
@@ -98,7 +106,7 @@ a:hover {
   position:absolute;
   display: none;
   width: 200px;
-  margin-left: -100px;
+  margin: 14px 0 12px -100px;
   border: 0;
   font-size: 12px;
 }
@@ -106,9 +114,11 @@ a:hover {
 #project-name {
   position: relative;
   display: none;
-  top: -10px;
-  font-size: 18px;
-  font-weight: bold;
+  font: 18px 'Asap', sans-serif;
+  letter-spacing: 1.3px;
+  color: #9ddbd7;
+  text-transform: uppercase;
+  margin: 12px 0;
 }
 
 .settings-button {
@@ -159,8 +169,8 @@ a:hover {
 
 #spinner {
   position: fixed;
-  top: 3px;
-  left: 44px;
+  top: 15px;
+  left: 25px;
 }
 
 #auth-spinner {
@@ -174,7 +184,7 @@ a:hover {
 
 #canvas {
   position: absolute;
-  top: 20px;
+  top: 50px;
   left: 0;
   height: 80vh;
   padding: 20px 10px;
@@ -186,16 +196,14 @@ a:hover {
 
 #canvas .marker {
   position: relative;
-  background-color: #fff;
-  border: solid 1px #ccc;
-  font-size: 15px;
-  font-weight: bold;
-  line-height: 1em;
-  padding: 5px 5px 20px;
+  font: 14px 'Asap', sans-serif;
+  letter-spacing: 1px;
+  color: #71597d;
   width: 200px;
   height: 25px;
   padding: 0 5px;
   margin: 0 20px;
+  text-transform: uppercase;
   text-align: center;
 }
 
@@ -232,7 +240,7 @@ a:hover {
 }
 
 #canvas .dropzone {
-  background-color: #fff;
+  background-color: rgba(157, 219, 215, 0.27);
   border-left: solid 1px #e2e9f2;
   border-right: solid 1px #e2e9f2;
   border-top: solid 1px #fff;
@@ -268,15 +276,17 @@ a:hover {
 #canvas .task {
   position: relative;
   display: inline-block;
-  width: 64px;
-  height: 64px;
+  width: 76px;
+  height: 76px;
   overflow: hidden;
-  margin: 0 5px;
+  margin: 5px 5px 0px 10px;
   padding: 5px;
-  font-size: 10px;
-  line-height: 1.0em;
-  background-color: #ffffa5;
-  box-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
+  font: 10px/1.0 HelveticaNeue-Light, Helvetica, Arial, sans-serif;;
+  letter-spacing: 0.7px;
+  background-color: #fcfae2;
+  color: #71597d;
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
   cursor: move;
 }
 
@@ -420,9 +430,5 @@ a:hover {
   #auth-button {
     background-image: url("../imgs/asana-oauth-button-purple@2x.png");
     background-size: 159px 29px;
-  }
-  #board .navbar .brand {
-    background-image: url("../imgs/logo@2x.png");
-    background-size: 24px 24px;
   }
 }
