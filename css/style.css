@@ -183,14 +183,16 @@ a:hover {
 
 
 #canvas {
+  table-layout: fixed;
   position: absolute;
-  top: 50px;
+  top: 60px;
   left: 0;
   height: 80vh;
+  width: 100%;
   padding: 20px 10px;
   font-size: 18px;
   line-height: 2em;
-  border-collapse: separate;
+  border-collapse: collapse;
   border-spacing: 5px 0;
 }
 
@@ -233,7 +235,7 @@ a:hover {
 
 #canvas .assignee {
   font-size: 11px;
-  width: 40px;
+  width: 60px;
   text-align: center;
   line-height: 1em;
   font-weight: 100;
@@ -253,7 +255,7 @@ a:hover {
   vertical-align: top;
 }
 #canvas .dropzone:hover {
-  background-color: #fafbfc;
+  background-color: rgba(157, 219, 215, 0.5);
 }
 
 #canvas .dropzone.active {
@@ -309,7 +311,7 @@ a:hover {
 
 #task-detail {
   position: fixed;
-  top: 0;
+  top: 40px;
   right: -40%;
   width: 30%;
   height: 90vh;
@@ -356,7 +358,7 @@ a:hover {
 #task-close {
   position: absolute;
   top: 45px;
-  right: 10px;
+  right: 12px;
 }
 #task-close:hover {
   color: #c33;

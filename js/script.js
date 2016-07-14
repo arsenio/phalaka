@@ -204,7 +204,7 @@
 
   function renderProject(){
     var canvas = document.getElementById("canvas");
-    var tableHead = canvas.querySelector("thead");
+    var tableHead = canvas.querySelector("thead tr");
     var tableBody = canvas.querySelector("tbody");
 
     var spacer = document.createElement("th");
