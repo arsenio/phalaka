@@ -192,7 +192,7 @@ a:hover {
   padding: 20px 10px;
   font-size: 18px;
   line-height: 2em;
-  border-collapse: collapse;
+  border-collapse: separate;
   border-spacing: 5px 0;
 }
 
@@ -223,6 +223,18 @@ a:hover {
   height: 90%;
 }
 
+#canvas tbody tr:first-child td {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  border-top: 0;
+}
+
+#canvas tbody tr:last-child td {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  border-bottom: 0;
+}
+
 #canvas .marker .settings-pane {
   top: 30px;
   right: 5px;
@@ -245,7 +257,7 @@ a:hover {
   background-color: rgba(157, 219, 215, 0.27);
   border-left: solid 1px #e2e9f2;
   border-right: solid 1px #e2e9f2;
-  border-top: solid 1px #fff;
+  border-top: solid 1px #9ddbd7;
   border-bottom: dotted 1px #ddd;
   width: 200px;
   height: 100%;
