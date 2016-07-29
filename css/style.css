@@ -216,6 +216,18 @@ a:hover {
   z-index: 1;
 }
 
+#canvas thead {
+  display: block;
+  width: 99vw;
+}
+
+#canvas tbody {
+  display: block;
+  width: 99vw;
+  height: 80vh;
+  overflow-y: auto;
+}
+
 #canvas tbody tr {
   height: 50px;
 }
