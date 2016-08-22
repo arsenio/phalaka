@@ -161,16 +161,26 @@
           var member = details.data.members[i];
           members[member.id] = member.name;
         }
-        var payload = {"opt_fields": "name,completed,assignee,assignee.name,assignee.photo"};
-        tasks = [];
-        apiGet("/projects/" + projectId + "/tasks", payload, function(tickets){
-          if(tickets.data){
-            tasks = tickets.data;
-          }
-
-          renderProject();
-        });
+        pollProjectData(projectId, renderProject);
       }
+    });
+  }
+
+  function pollProjectData(projectId, callback){
+    var payload = {"opt_fields": "name,completed,assignee,assignee.name,assignee.photo"};
+    tasks = [];
+    apiGet("/projects/" + projectId + "/tasks", payload, function(tickets){
+      if(tickets.data){
+        tasks = tickets.data;
+      }
+
+      if(callback){
+        callback();
+      }
+
+      setTimeout(function(){
+        pollProjectData(projectId, renderTasks);
+      }, 60000);
     });
   }
 
@@ -270,7 +280,11 @@
       }
       tableBody.appendChild(row);
     }
+    renderTasks();
+  }
 
+
+  function renderTasks(){
     // Tasks, Pass Two: add the uncompleted tasks to the lanes.
     var currentLaneId = backlog;
     for(var i=0, x=tasks.length; i<x; i++){
@@ -286,8 +300,10 @@
           dropzoneId += "-" + task.assignee.id;
         }
         var dropzone = document.getElementById(dropzoneId);
-        var ticket = document.createElement("div");
-        ticket.setAttribute("id", "task-" + task.id);
+
+        var ticketId = "task-" + task.id;
+        var ticket = document.getElementById(ticketId) || document.createElement("div");
+        ticket.setAttribute("id", ticketId);
         ticket.className = "task";
         ticket.setAttribute("data-task_id", task.id);
         ticket.setAttribute("draggable", "true");
