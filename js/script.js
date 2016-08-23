@@ -287,6 +287,7 @@
   function renderTasks(){
     // Tasks, Pass Two: add the uncompleted tasks to the lanes.
     var currentLaneId = backlog;
+    var seenTicketIds = [];
     for(var i=0, x=tasks.length; i<x; i++){
       var task = tasks[i];
       if(task.name.endsWith(":")){
@@ -302,6 +303,7 @@
         var dropzone = document.getElementById(dropzoneId);
 
         var ticketId = "task-" + task.id;
+        seenTicketIds.push(ticketId);
         var ticket = document.getElementById(ticketId) || document.createElement("div");
         ticket.setAttribute("id", ticketId);
         ticket.className = "task";
@@ -312,6 +314,14 @@
         ticket.addEventListener("dblclick", revealTaskDetail);
 
         dropzone.appendChild(ticket);
+      }
+    }
+    var displayedTickets = document.querySelectorAll("div.task");
+    for(var i=0, x=displayedTickets.length; i<x; i++){
+      var ticket = displayedTickets[i];
+      var ticketId = ticket.getAttribute("id");
+      if(seenTicketIds.indexOf(ticketId) == -1){
+        ticket.remove();
       }
     }
     checkWIPLimits();
